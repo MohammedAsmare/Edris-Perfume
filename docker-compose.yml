@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: edris_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: edris_perfume
+      POSTGRES_USER: edris_user
+      POSTGRES_PASSWORD: edris_secure_password_2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U edris_user -d edris_perfume"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../Dockerfile.backend
+    container_name: edris_backend
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      SERVER_PORT: 8080
+      DB_URL: jdbc:postgresql://postgres:5432/edris_perfume
+      DB_USERNAME: edris_user
+      DB_PASSWORD: edris_secure_password_2026
+      FRONTEND_ORIGIN: http://localhost:5173,http://localhost:3000
+      PAYMENT_PROVIDER: mock
+      TELEBIRR_API_BASE_URL: https://api.telebirr.et
+      TELEBIRR_MERCHANT_ID: EDRIS_MERCHANT_001
+      TELEBIRR_APP_ID: EDRIS_APP_ID
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../Dockerfile.frontend
+    container_name: edris_frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+      - "5173:80"
+
+volumes:
+  postgres_data:

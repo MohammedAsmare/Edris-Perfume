@@ -1,0 +1,56 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: edris-perfume-backend
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  datasource:
+    url: ${DB_URL:jdbc:h2:mem:edrisdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH}
+    driver-class-name: ${DB_DRIVER:org.h2.Driver}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
+  jpa:
+    database-platform: ${JPA_DIALECT:org.hibernate.dialect.H2Dialect}
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+# Edris Perfume App Properties
+app:
+  jwt:
+    secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970} # 256-bit key
+    expiration-ms: 86400000 # 24 hours
+  cors:
+    allowed-origins: ${FRONTEND_ORIGIN:http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173}
+
+# Payment Integrations (Ethiopia)
+payment:
+  telebirr:
+    provider: ${PAYMENT_PROVIDER:mock} # mock, sandbox, production
+    api-base-url: ${TELEBIRR_API_BASE_URL:https://api.telebirr.et}
+    merchant-id: ${TELEBIRR_MERCHANT_ID:EDRIS_MERCHANT_001}
+    app-id: ${TELEBIRR_APP_ID:EDRIS_APP_ID}
+    public-key: ${TELEBIRR_PUBLIC_KEY:MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A}
+    private-key: ${TELEBIRR_PRIVATE_KEY:MIIEowIBAAKCAQEA}
+    webhook-secret: ${TELEBIRR_WEBHOOK_SECRET:sec_telebirr_demo_key_9981}
+    callback-url: ${PAYMENT_CALLBACK_BASE_URL:http://localhost:8080/api/v1/payments/webhooks/telebirr}
+    return-url: ${PAYMENT_RETURN_URL:http://localhost:5173/orders}
+  bank:
+    provider: ${BANK_PAYMENT_PROVIDER:mock}
+    api-base-url: ${BANK_PAYMENT_API_BASE_URL:https://bank-api.example.et}
+    auto-reconciliation-enabled: false
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
